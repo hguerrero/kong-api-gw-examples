@@ -6,6 +6,13 @@ This example shows how to use Kong API Gateway to mediate between HTTP and Kafka
 
 This uses the Kong Enterprise Plugins, so you will need a license. You can get a free trial license from [Kong](https://konghq.com/products/kong-konnect/register).
 
+**Software**
+
+- [Docker](https://docs.docker.com/get-docker/)
+- [Docker Compose](https://docs.docker.com/compose/install/)
+- [kcat](https://github.com/edenhill/kcat)
+- [jq](https://stedolan.github.io/jq/)
+
 ## Setup
 
 Start the docker compose environment:
@@ -25,6 +32,29 @@ curl -H 'Host: kafka.dev' -X POST -d '{"message": "Hello World"}' http://localho
 This will produce a message to the `incoming` topic.
 
 > Note that you will need to run it twice as the first call creates the topic and the second call produces the message.
+
+Check the produced messages using kcat:
+
+```sh
+kcat -C -b localhost:9092 -t incoming
+```
+
+If you have jq installed you can use the following to pretty print the messages:
+
+```sh
+kcat -C -b localhost:9092 -t incoming -e | jq
+```
+
+You should see the message you produced in the output.
+
+```json
+{
+  "body_args": {
+    "{\"message\": \"Hello World\"}": true
+  },
+  "body": "{\"message\": \"Hello World\"}"
+}
+```
 
 ## Consume
 
@@ -50,7 +80,7 @@ The response will be a JSON array of messages.
     "partitions": {
       "0": {
         "errcode": 0,
-        "high_watermark": 1,
+        "high_watermark": 0,
         "records": {}
       }
     }
@@ -78,7 +108,7 @@ curl -H 'Host: kafka.dev' http://localhost:8000/kafka/consumer/http-get
     "partitions": {
       "0": {
         "errcode": 0,
-        "high_watermark": 2,
+        "high_watermark": 1,
         "records": [
           {
             "key": "",
