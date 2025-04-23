@@ -1,0 +1,197 @@
+_format_version: "3.0"
+_transform: true
+
+services:
+- name: request_callout
+  url: https://httpbin.konghq.com/anything
+  routes:
+  - name: request_callout
+    hosts:
+    - callout.dev
+    paths:
+    - /
+    plugins:
+    - name: request-callout
+      config:
+        upstream:
+          body:
+            forward: false  
+            custom:
+              username: "$(callouts.c1.response.body.username)"
+              country: "$(callouts.c2.response.body.country)"
+        callouts:
+        - name: c1
+          request:
+            method: GET
+            headers:
+              custom:
+                host: mock.dev
+                X-Kong-Mocking-Example-Id: $('user' .. kong.request.get_body().id)
+            url: http://localhost:8000/v1/users
+            by_lua: |- 
+              local body = kong.request.get_body() or {}; 
+              local id = body.id; 
+              if id then 
+                kong.ctx.shared.callouts.c1.request.params.url = 'http://localhost:8000/v1/users/' .. id 
+              end
+          response:
+            body:
+              decode: true
+        - name: c2
+          depends_on:
+          - c1
+          request:
+            method: GET
+            headers:
+              custom:
+                host: mock.dev
+                X-Kong-Mocking-Example-Id: $('address' .. kong.ctx.shared.callouts.c1.response.body.address_id)
+            url: http://localhost:8000/v1/addresses
+            by_lua: |- 
+              local body = kong.ctx.shared.callouts.c1.response.body or {}; 
+              local id = body.address_id; 
+              if id then 
+                kong.ctx.shared.callouts.c2.request.params.url = 'http://localhost:8000/v1/addresses/' .. id 
+              end
+          response:
+            body:
+              decode: true
+
+- name: enrichment_mock
+  url: http://localhost:8000
+  routes:
+  - name: enrichment_mock
+    hosts:
+    - mock.dev
+    paths:
+    - /
+    plugins:
+      - name: mocking
+        config:
+          api_specification: |
+            openapi: 3.0.0
+            info:
+              title: Mock API
+              version: 1.0.0
+            paths:
+              /v1/users:
+                get:
+                  responses:
+                    200:
+                      description: List of users
+                      content:
+                        application/json:
+                          schema:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/User'
+                          example:
+                            - id: 123
+                              username: "John Doe"
+                              address_id: 456
+                            - id: 124
+                              username: "Jane Smith"
+                              address_id: 457
+              /v1/users/{id}:
+                get:
+                  parameters:
+                    - name: id
+                      in: path
+                      required: true
+                      schema:
+                        type: integer
+                  responses:
+                    200:
+                      description: Single user
+                      content:
+                        application/json:
+                          schema:
+                            $ref: '#/components/schemas/User'
+                          examples:
+                            user123:
+                              value:
+                                id: 123
+                                username: "John Doe"
+                                address_id: 456
+                            user124:
+                              value:
+                                id: 124
+                                username: "Jane Smith"
+                                address_id: 457
+              /v1/addresses:
+                get:
+                  responses:
+                    200:
+                      description: List of addresses
+                      content:
+                        application/json:
+                          schema:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/Address'
+                          example:
+                            - id: 456
+                              street: "456 Oak Ave"
+                              city: "San Francisco"
+                              country: "USA"
+                            - id: 457
+                              street: "Vogtallee 8"
+                              city: "Bautzen"
+                              country: "Germany"
+              /v1/addresses/{id}:
+                get:
+                  parameters:
+                    - name: id
+                      in: path
+                      required: true
+                      schema:
+                        type: integer
+                  responses:
+                    200:
+                      description: Single address
+                      content:
+                        application/json:
+                          schema:
+                            $ref: '#/components/schemas/Address'
+                          examples:
+                            address456:
+                              value:
+                                id: 456
+                                street: "123 Main St"
+                                city: "New York"
+                                country: "USA"
+                            address457:
+                              value:
+                                id: 457
+                                street: "Vogtallee 8"
+                                city: "Bautzen"
+                                country: "Germany"
+            components:
+              schemas:
+                User:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      example: 123
+                    username:
+                      type: string
+                      example: "John Doe"
+                    address_id:
+                      type: integer
+                      example: 456
+                Address:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      example: 456
+                    street:
+                      type: string
+                      example: "123 Main St"
+                    city:
+                      type: string
+                      example: "New York"
+                    country:
+                      type: string
+                      example: "USA"
