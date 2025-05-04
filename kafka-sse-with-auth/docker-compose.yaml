@@ -1,0 +1,41 @@
+services:
+  kafka:
+    image: apache/kafka:latest
+    container_name: kafka
+    network_mode: host
+    healthcheck:
+      test: [ "CMD-SHELL", "kafka-topics.sh --bootstrap-server localhost:9092 --list" ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+  kong:
+    image: kong/kong-gateway:3.10
+    container_name: kong
+    network_mode: host
+    depends_on:
+      - kafka
+    volumes:
+        - ./kong-config/:/kong/declarative/
+    environment:
+        - KONG_DATABASE=off
+        - KONG_DECLARATIVE_CONFIG=/kong/declarative/kong.yaml
+        - KONG_PROXY_ACCESS_LOG=/dev/stdout
+        - KONG_ADMIN_ACCESS_LOG=/dev/stdout
+        - KONG_PROXY_ERROR_LOG=/dev/stderr
+        - KONG_ADMIN_ERROR_LOG=/dev/stderr
+        - KONG_ADMIN_LISTEN=0.0.0.0:8001
+        - KONG_ADMIN_GUI_URL=http://localhost:8002
+        - KONG_LICENSE_DATA
+        # - KONG_LOG_LEVEL=debug
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    container_name: keycloak
+    network_mode: host    
+    environment:
+      - KC_BOOTSTRAP_ADMIN_USERNAME=admin
+      - KC_BOOTSTRAP_ADMIN_PASSWORD=admin
+    command: start-dev --import-realm
+    volumes:
+      - ./realm-export.json:/opt/keycloak/data/import/realm-export.json

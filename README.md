@@ -52,6 +52,21 @@ Shows how to use Kong API Gateway to mediate between HTTP and Kafka protocols.
 - Apache Kafka
 - Server-Sent Events
 
+### [Kafka SSE with Authentication](kafka-sse-with-auth)
+
+Demonstrates how to consume Kafka messages via Server-Sent Events (SSE) with OpenID Connect (OIDC) authentication.
+
+**Key Features:**
+- Kafka message consumption via SSE
+- OIDC authentication integration
+- Keycloak for identity management
+
+**Technologies:**
+- Kong Kafka Consumer plugin
+- Kong OIDC plugin
+- Apache Kafka
+- Server-Sent Events
+
 ## Getting Started
 
 1. Clone this repository:
@@ -78,11 +93,17 @@ kong-examples/
 │   ├── kong-config/
 │   │   └── kong.yaml
 │   └── mock-api.yaml
-└── kafka-http-mediation/
+├── kafka-http-mediation/
+│   ├── README.md
+│   ├── docker-compose.yaml
+│   └── kong-config/
+│       └── kong.yaml
+└── kafka-sse-with-auth/
     ├── README.md
     ├── docker-compose.yaml
-    └── kong-config/
-        └── kong.yaml
+    ├── kong-config/
+    │   └── kong.yaml
+    └── realm-export.json
 ```
 
 ## Contributing

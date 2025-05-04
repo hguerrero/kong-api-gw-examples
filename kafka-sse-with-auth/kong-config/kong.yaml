@@ -1,0 +1,58 @@
+_format_version: "3.0"
+_transform: true
+
+routes:
+- name: kafka-consumer-sse
+  hosts:
+  - kafka.dev
+  paths:
+  - /kafka/consumer/sse
+
+plugins:
+- name: kafka-consume
+  route: kafka-consumer-sse
+  config:
+    topics: 
+    - name: streaming
+    mode: server-sent-events
+    bootstrap_servers:
+    - host: localhost
+      port: 9092
+    # - host: localhost
+    #   port: 9093
+    # - host: localhost
+    #   port: 9094
+
+- name: openid-connect
+  route: kafka-consumer-sse
+  # enabled: false
+  id: d7e6cc2a-32d0-49c2-833f-110ddf177a2c
+  config:
+    issuer: http://localhost:8080/realms/kafka-realm
+    client_id:
+    - kafka-client
+    client_secret:
+    - secret123
+    ssl_verify: false
+    consumer_claim:
+    - email
+    verify_signature: false
+    # verify_claims: true
+    # authorization_endpoint: https://keycloak.apim.eu/auth/realms/kong/protocol/openid-connect/auth
+    redirect_uri:
+    - http://localhost:3000/oidc
+    roles_claim:
+    - "realm_access"
+    - "roles"
+
+# - name: rate-limiting
+#   consumer: 3f2504e0-4f89-11d3-9a0c-0305e82c3301
+#   enabled: false
+#   config:
+#     second: 1
+#     hour: 5
+#     policy: local
+
+consumers:
+- username: kafka@example.com
+  id: 3f2504e0-4f89-11d3-9a0c-0305e82c3301
