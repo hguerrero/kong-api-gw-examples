@@ -1,0 +1,15 @@
+{
+  "type": "record",
+  "name": "UserRecord",
+  "namespace": "kong.avro",
+  "fields": [
+    {
+      "name": "username",
+      "type": "string"
+    },
+    {
+      "name": "age",
+      "type": "int"
+    }
+  ]
+}

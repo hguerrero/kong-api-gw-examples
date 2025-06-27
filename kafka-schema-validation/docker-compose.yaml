@@ -1,0 +1,46 @@
+name: kong-event-gw-dev
+services:
+  kafka:
+    image: apache/kafka:3.9.0
+    container_name: kafka
+    ports:
+      - "9092:19092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENERS: INTERNAL://kafka:9092,CONTROLLER://kafka:9093,EXTERNAL://0.0.0.0:19092
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,EXTERNAL://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_CLUSTER_ID: 'abcdefghijklmnopqrstuv'
+      KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
+
+  schema-registry:
+    image: apicurio/apicurio-registry:3.0.9
+    container_name: schema-registry
+    ports:
+      - "8080:8080"
+  
+  schema-registry-ui:
+    image: apicurio/apicurio-registry-ui:3.0.9
+    container_name: schema-registry-ui
+    ports:
+      - "8888:8080"
+
+  kong:
+    image: kong/kong-gateway-dev:3.11.0.0-rc.8
+    container_name: kong-docker
+    ports:
+      - "8000:8000"
+      - "8443:8443"
+    depends_on:
+      - kafka
+      - keycloak
+      - schema-registry
+    env_file:
+      - konnect.env
+    environment:
+        KONG_LOG_LEVEL: debug
+

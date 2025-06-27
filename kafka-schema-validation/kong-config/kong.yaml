@@ -1,0 +1,74 @@
+_format_version: "3.0"
+_transform: true
+
+routes:
+- name: kafka-producer
+  paths:
+  - /kafka/producer
+- name: kafka-consumer
+  paths:
+  - /kafka/consumer/rest
+- name: kafka-consumer-schema
+  paths:
+  - /kafka/consumer/rest/schema
+- name: kafka-consumer-sse-schema
+  paths:
+  - /kafka/consumer/sse
+
+plugins:
+- name: kafka-upstream
+  route: kafka-producer
+  config:
+    topic: my-topic-incoming
+    producer_async: false
+    schema_registry:
+      confluent:
+        url: http://schema-registry:8080/apis/ccompat/v7
+        authentication:
+          mode: none
+          # basic:
+          #   username: user
+          #   password: password
+        value_schema:
+          subject_name: user-value
+          schema_version: latest
+    message_by_lua_functions:
+    - "return function(message) return message.body end"  
+    bootstrap_servers:
+    - host: kafka
+      port: 9092
+- name: kafka-consume
+  route: kafka-consumer
+  config:
+    topics: 
+    - name: my-topic-incoming
+    bootstrap_servers:
+    - host: kafka
+      port: 9092
+- name: kafka-consume
+  route: kafka-consumer-schema
+  config:
+    topics: 
+    - name: my-topic-incoming
+    bootstrap_servers:
+    - host: kafka
+      port: 9092
+    schema_registry:
+      confluent:
+        url: http://schema-registry:8080/apis/ccompat/v7
+        authentication:
+          mode: none
+- name: kafka-consume
+  route: kafka-consumer-sse-schema
+  config:
+    topics: 
+    - name: my-topic-incoming
+    bootstrap_servers:
+    - host: kafka
+      port: 9092
+    mode: server-sent-events
+    schema_registry:
+      confluent:
+        url: http://schema-registry:8080/apis/ccompat/v7
+        authentication:
+          mode: none
