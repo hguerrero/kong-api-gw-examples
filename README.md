@@ -67,6 +67,22 @@ Demonstrates how to consume Kafka messages via Server-Sent Events (SSE) with Ope
 - Apache Kafka
 - Server-Sent Events
 
+### [Kafka Schema Validation](kafka-schema-validation)
+
+Demonstrates how to use Kong Gateway as an event gateway with Kafka integration, including schema validation using a Schema Registry.
+
+**Key Features:**
+- Kafka message production with schema validation
+- Multiple consumption patterns (REST and SSE)
+- Schema Registry integration
+- Avro and JSON schema support
+
+**Technologies:**
+- Kong Kafka plugins
+- Apache Kafka
+- Apicurio Schema Registry (Confluent-compatible)
+- Avro schemas
+
 ## Getting Started
 
 1. Clone this repository:
@@ -98,12 +114,20 @@ kong-examples/
 │   ├── docker-compose.yaml
 │   └── kong-config/
 │       └── kong.yaml
-└── kafka-sse-with-auth/
+├── kafka-sse-with-auth/
+│   ├── README.md
+│   ├── docker-compose.yaml
+│   ├── kong-config/
+│   │   └── kong.yaml
+│   └── realm-export.json
+└── kafka-schema-validation/
     ├── README.md
     ├── docker-compose.yaml
+    ├── docker-compose.ee.yaml
     ├── kong-config/
     │   └── kong.yaml
-    └── realm-export.json
+    ├── avro-schema.json
+    └── json-schema.json
 ```
 
 ## Contributing
@@ -123,6 +147,6 @@ This project is licensed under the [Apache 2.0 License](LICENSE).
 
 ## Additional Resources
 
-- [Kong Documentation](https://docs.konghq.com/)
+- [Kong Documentation](https://developer.konghq.com/)
 - [Kong Enterprise](https://konghq.com/products/kong-enterprise)
 - [Kong Nation Community](https://discuss.konghq.com/)
