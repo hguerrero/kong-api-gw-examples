@@ -19,6 +19,9 @@ plugins:
 - name: kafka-upstream
   route: kafka-producer
   config:
+    bootstrap_servers:
+    - host: kafka
+      port: 9092
     topic: my-topic-incoming
     producer_async: false
     schema_registry:
@@ -26,17 +29,14 @@ plugins:
         url: http://schema-registry:8080/apis/ccompat/v7
         authentication:
           mode: none
-          # basic:
-          #   username: user
-          #   password: password
+          basic:
+            username: user
+            password: password
         value_schema:
-          subject_name: user-value
+          subject_name: my-topic-incoming-value
           schema_version: latest
     message_by_lua_functions:
     - "return function(message) return message.body end"  
-    bootstrap_servers:
-    - host: kafka
-      port: 9092
 - name: kafka-consume
   route: kafka-consumer
   config:
