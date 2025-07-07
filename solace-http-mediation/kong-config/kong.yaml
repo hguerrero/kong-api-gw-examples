@@ -1,0 +1,28 @@
+_format_version: "3.0"
+_transform: true
+
+routes:
+- name: solace-producer
+  paths:
+  - /solace/producer
+
+plugins:
+  - name: solace-upstream
+    route: solace-producer
+    config:
+      session:
+        host: tcp://solace:55555
+        vpn_name: default
+        authentication:
+          scheme: BASIC
+          username: gwuser
+          password: gwpassword
+      message:
+        destinations:
+        - name: solace/test/munich
+          type: TOPIC
+        delivery_mode: PERSISTENT
+        forward_body: true
+        functions:
+        - return message.body
+        # - return string.upper(message)
