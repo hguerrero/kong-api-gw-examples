@@ -1,0 +1,80 @@
+_format_version: "3.0"
+_transform: true
+_info:
+  select_tags:
+  - ai-manager-created
+
+services:
+- name: ai-gw-images
+  url: http://host.docker.internal:8086
+  tags:
+  - "ai-manager-name: OpenAI Image Generator"
+  routes:
+  - name: images
+    paths:
+    - /ai/images
+- name: ai-gw-transcriptions
+  url: http://host.docker.internal:8086
+  tags:
+  - "ai-manager-name: OpenAI Audio Transcription"
+  routes:
+  - name: transcriptions
+    paths:
+    - /ai/transcriptions
+    
+plugins:
+- name: ai-proxy-advanced
+  service: ai-gw-images
+  config:
+    genai_category: image/generation
+    balancer:
+      algorithm: "round-robin"
+      tokens_count_strategy: "total-tokens"
+      latency_strategy: "tpot"
+      retries: 3
+    targets:
+    - route_type: image/v1/images/generations
+      auth:
+          header_name: Authorization
+          header_value: "Bearer <your-api-key>"
+      logging:
+        log_payloads: true
+      model:
+        provider: "openai"
+        name: "dall-e-3"
+
+- name: ai-proxy-advanced
+  service: ai-gw-transcriptions
+  config:
+    genai_category: audio/transcription
+    balancer:
+      algorithm: "round-robin"
+      tokens_count_strategy: "total-tokens"
+      latency_strategy: "tpot"
+      retries: 3
+    max_request_body_size: 104857600
+    targets:
+    - route_type: audio/v1/audio/transcriptions
+      auth:
+          header_name: Authorization
+          header_value: "Bearer <your-api-key>"
+      logging:
+        log_payloads: true
+      model:
+        provider: "openai"
+        name: "whisper-1"
+
+- name: cors
+  config:
+    origins:
+    - "*"
+    methods:
+    - GET
+    - POST
+    - PUT
+    - DELETE
+    - OPTIONS
+    headers:
+    - "*"
+    max_age: 3600
+    credentials: true

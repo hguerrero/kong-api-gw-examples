@@ -1,0 +1,12 @@
+name: kong-ai-gw
+services:
+  kong:
+    image: kong/kong-gateway:3.11
+    container_name: kong-docker
+    ports:
+      - "8000-8002:8000-8002"
+      - "8443:8443"
+    env_file:
+      - konnect.env
+    environment:
+        KONG_LOG_LEVEL: debug
