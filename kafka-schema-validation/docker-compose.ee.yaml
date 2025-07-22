@@ -38,7 +38,6 @@ services:
       - "8443:8443"
     depends_on:
       - kafka
-      - keycloak
       - schema-registry
     volumes:
         - ./kong-config/:/kong/declarative/

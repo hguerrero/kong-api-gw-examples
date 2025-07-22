@@ -1,0 +1,24 @@
+name: kong-event-gw-dev
+services:
+  compressor:
+    image: kong/ai-compress-service:latest
+    container_name: kong-compressor
+    ports:
+      - "9000:8080"
+    environment:
+      - LLMLINGUA_DEVICE_MAP=cpu
+      - GUNICORN_LOG_LEVEL=debug
+      - LLMLINGUA_LOG_LEVEL=debug
+
+  kong:
+    image: kong/kong-gateway:3.11
+    container_name: kong-docker
+    ports:
+      - "8000-8002:8000-8002"
+      - "8443:8443"
+    depends_on:
+      - compressor
+    env_file:
+      - konnect.env
+    # environment:
+    #     KONG_LOG_LEVEL: debug
