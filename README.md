@@ -83,6 +83,57 @@ Demonstrates how to use Kong Gateway as an event gateway with Kafka integration,
 - Apicurio Schema Registry (Confluent-compatible)
 - Avro schemas
 
+### [AI Image Generation](ai-image-generation)
+
+Demonstrates how to use Kong's AI Proxy Advanced plugin to create an AI gateway for image generation and audio transcription services.
+
+**Key Features:**
+- OpenAI DALL-E 3 image generation
+- OpenAI Whisper audio transcription
+- AI request routing and load balancing
+- Token counting and latency optimization
+- Request/response logging
+
+**Technologies:**
+- Kong AI Proxy Advanced plugin
+- OpenAI API (DALL-E 3, Whisper)
+- AI request balancing and retries
+- CORS support
+
+### [AI Prompt Compressor](ai-prompt-compressor)
+
+Shows how to use Kong's AI Prompt Compressor plugin to optimize LLM requests by compressing prompts while maintaining semantic meaning.
+
+**Key Features:**
+- Intelligent prompt compression
+- Token-based compression strategies
+- LLM request optimization
+- Configurable compression ranges
+- Integration with local LLM models
+
+**Technologies:**
+- Kong AI Prompt Compressor plugin
+- Kong AI Proxy Advanced plugin
+- LLMlingua compression service
+- Local LLM models (Qwen2.5)
+
+### [Solace HTTP Mediation](solace-http-mediation)
+
+Demonstrates how to use Kong API Gateway to mediate between HTTP and Solace PubSub+ messaging.
+
+**Key Features:**
+- HTTP to Solace message production
+- Queue-based messaging patterns
+- Message transformation and routing
+- Persistent message delivery
+- Authentication integration
+
+**Technologies:**
+- Kong Solace Upstream plugin
+- Solace PubSub+ Standard
+- Message queues and topics
+- Basic authentication
+
 ## Getting Started
 
 1. Clone this repository:
@@ -101,33 +152,57 @@ export KONG_LICENSE_DATA='{"license":{"version":1,...}}'
 ## Project Structure
 
 ```
-kong-examples/
+kong-api-gw-examples/
 ├── README.md
-├── request-callout/
+├── ai-image-generation/
 │   ├── README.md
 │   ├── docker-compose.yaml
+│   ├── docker-compose.ee.yaml
 │   ├── kong-config/
 │   │   └── kong.yaml
-│   └── mock-api.yaml
+│   ├── ee.env
+│   └── konnect.env
+├── ai-prompt-compressor/
+│   ├── README.md
+│   ├── docker-compose.yaml
+│   ├── docker-compose.ee.yaml
+│   ├── kong-config/
+│   │   └── kong.yaml
+│   ├── ee.env
+│   └── konnect.env
 ├── kafka-http-mediation/
 │   ├── README.md
 │   ├── docker-compose.yaml
 │   └── kong-config/
 │       └── kong.yaml
+├── kafka-schema-validation/
+│   ├── README.md
+│   ├── docker-compose.yaml
+│   ├── docker-compose.ee.yaml
+│   ├── kong-config/
+│   │   └── kong.yaml
+│   ├── avro-schema.json
+│   └── json-schema.json
 ├── kafka-sse-with-auth/
 │   ├── README.md
 │   ├── docker-compose.yaml
 │   ├── kong-config/
 │   │   └── kong.yaml
 │   └── realm-export.json
-└── kafka-schema-validation/
+├── request-callout/
+│   ├── README.md
+│   ├── docker-compose.yaml
+│   ├── kong-config/
+│   │   └── kong.yaml
+│   └── mock-api.yaml
+└── solace-http-mediation/
     ├── README.md
     ├── docker-compose.yaml
     ├── docker-compose.ee.yaml
     ├── kong-config/
     │   └── kong.yaml
-    ├── avro-schema.json
-    └── json-schema.json
+    ├── ee.env
+    └── konnect.env
 ```
 
 ## Contributing
