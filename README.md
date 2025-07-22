@@ -2,6 +2,23 @@
 
 This repository contains practical examples demonstrating various features and use cases of Kong API Gateway.
 
+## Table of Contents
+
+### 🤖 AI & Machine Learning
+- [AI Image Generation](#ai-image-generation) - OpenAI DALL-E 3 & Whisper integration
+- [AI Prompt Compressor](#ai-prompt-compressor) - LLM prompt optimization & compression
+
+### 📨 Event & Message Processing
+- [Kafka HTTP Mediation](#kafka-http-mediation) - HTTP ↔ Kafka protocol mediation
+- [Kafka SSE with Authentication](#kafka-sse-with-authentication) - Kafka SSE streaming with OIDC
+- [Kafka Schema Validation](#kafka-schema-validation) - Event gateway with schema registry
+- [Solace HTTP Mediation](#solace-http-mediation) - HTTP ↔ Solace PubSub+ messaging
+
+### 🔧 API Enhancement
+- [Request Callout](#request-callout) - API enrichment with backend services
+
+---
+
 ## Overview
 
 Each example is self-contained and includes:
