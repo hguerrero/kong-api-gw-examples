@@ -71,7 +71,31 @@ curl -i http://localhost:8001/status
 
 ## Usage
 
-### Image Generation
+### 🚀 Recommended: Interactive Demo Application
+
+The **preferred way to use** this Kong AI gateway setup is with the **AI Voice-to-Image Demo** application:
+
+🎯 **Repository:** [https://github.com/hguerrero/ai-voice-to-image-demo](https://github.com/hguerrero/ai-voice-to-image-demo)
+
+This demo application provides the **complete user experience**:
+- **Voice Input:** Record audio prompts using your microphone
+- **Audio Transcription:** Converts speech to text using the Whisper API through Kong
+- **Image Generation:** Creates images from transcribed prompts using DALL-E 3 through Kong
+- **Interactive UI:** Web-based interface for the complete workflow
+- **Real-world Usage:** Demonstrates practical integration patterns
+
+**Why use this demo?**
+- ✅ Uses both AI endpoints (transcription + image generation) in one workflow
+- ✅ Provides immediate visual feedback
+- ✅ Simulates real user interactions
+- ✅ No need to manually craft API requests
+- ✅ Perfect for demonstrations and proof-of-concepts
+
+### Alternative: Direct API Usage
+
+If you prefer to integrate directly with the APIs, you can use these endpoints:
+
+#### Image Generation
 
 Generate an image using DALL-E 3:
 
@@ -99,7 +123,7 @@ Expected response:
 }
 ```
 
-### Audio Transcription
+#### Audio Transcription
 
 Transcribe an audio file using Whisper:
 
@@ -146,6 +170,8 @@ The Kong configuration includes two AI Proxy Advanced plugin instances:
 5. **Authentication:** Centralized API key management
 
 ## Testing
+
+You can test the Kong AI gateway setup using the following curl commands:
 
 ### Test Image Generation
 
