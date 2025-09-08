@@ -9,6 +9,7 @@ This repository contains practical examples demonstrating various features and u
 - [AI Prompt Compressor](#ai-prompt-compressor) - LLM prompt optimization & compression
 
 ### 📨 Event & Message Processing
+- [Kafka Event-Driven API](#kafka-event-driven-api) - WebSocket-based Kafka message consumption
 - [Kafka HTTP Mediation](#kafka-http-mediation) - HTTP ↔ Kafka protocol mediation
 - [Kafka SSE with Authentication](#kafka-sse-with-authentication) - Kafka SSE streaming with OIDC
 - [Kafka Schema Validation](#kafka-schema-validation) - Event gateway with schema registry
@@ -52,6 +53,22 @@ Demonstrates how to use Kong's Request Callout plugin to enrich API requests wit
 - Kong Request Callout plugin
 - Kong Mocking plugin
 - OpenAPI specifications
+
+### [Kafka Event-Driven API](kafka-event-driven-api)
+
+Demonstrates how to use Kong API Gateway to consume Kafka messages via WebSocket connections for real-time event streaming.
+
+**Key Features:**
+- Real-time Kafka message consumption via WebSocket
+- Event-driven architecture patterns
+- Konnect data plane integration
+- Live message streaming
+
+**Technologies:**
+- Kong Kafka Consume plugin
+- Apache Kafka
+- WebSocket protocol
+- Kong Konnect
 
 ### [Kafka HTTP Mediation](kafka-http-mediation)
 
@@ -183,6 +200,13 @@ kong-api-gw-examples/
 │   ├── README.md
 │   ├── docker-compose.yaml
 │   ├── docker-compose.ee.yaml
+│   ├── kong-config/
+│   │   └── kong.yaml
+│   ├── ee.env
+│   └── konnect.env
+├── kafka-event-driven-api/
+│   ├── README.md
+│   ├── docker-compose.yaml
 │   ├── kong-config/
 │   │   └── kong.yaml
 │   ├── ee.env
