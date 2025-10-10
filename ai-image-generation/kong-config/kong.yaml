@@ -36,7 +36,7 @@ plugins:
     - route_type: image/v1/images/generations
       auth:
           header_name: Authorization
-          header_value: "Bearer <your-api-key>"
+          header_value: "{vault://ai/apikey}"
       logging:
         log_payloads: true
       model:
@@ -57,7 +57,7 @@ plugins:
     - route_type: audio/v1/audio/transcriptions
       auth:
           header_name: Authorization
-          header_value: "Bearer <your-api-key>"
+          header_value: "{vault://ai/apikey}"
       logging:
         log_payloads: true
       model:
