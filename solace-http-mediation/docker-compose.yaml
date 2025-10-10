@@ -46,7 +46,7 @@ services:
       - system_scaling_maxconnectioncount=100
 
   kong:
-    image: kong/kong-gateway-dev:3.11.0.0-rc.8
+    image: kong/kong-gateway:3.12
     container_name: kong-docker
     ports:
       - "8000:8000"
