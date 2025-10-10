@@ -25,3 +25,5 @@ Temporary Items
 .apdisk
 
 *.env
+
+*.token
