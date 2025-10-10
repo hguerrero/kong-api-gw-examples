@@ -1,28 +1,143 @@
 _format_version: "3.0"
 _transform: true
 
-routes:
-- name: solace-producer
-  paths:
-  - /solace/producer
+vaults:
+  - name: konnect
+    description: Secrets from Konnect
+    prefix: kv
+    config:
+      config_store_id: <your_config_store_id>
+
+services:
+  - name: solace-cloud-service
+    url: tcp://solace:55555
+    routes:
+      - name: solace-incoming-orders-route
+        paths:
+          - ~/solace/(?<topic_id>[\w/-]+)
+        methods:
+          - POST
+      - name: solace-outcoming-orders-route
+        paths:
+          - ~/solace/(?<topic_id>[\w-]+)
+        methods:
+          - GET
 
 plugins:
+  # Solace integration
   - name: solace-upstream
-    route: solace-producer
+    route: solace-incoming-orders-route
     config:
       session:
         host: tcp://solace:55555
-        vpn_name: default
+        vpn_name: demo
         authentication:
           scheme: BASIC
-          username: gwuser
-          password: gwpassword
+          username: "{vault://kv/solace-username}"
+          password: "{vault://kv/solace-password}"
       message:
         destinations:
-        - name: solace/test/munich
-          type: TOPIC
-        delivery_mode: PERSISTENT
+          - name: $(uri_captures['topic_id'])
+            type: TOPIC
+        delivery_mode: DIRECT
         forward_body: true
         functions:
-        - return message.body
-        # - return string.upper(message)
+          - return message.body
+  - name: solace-consume
+    route: solace-outcoming-orders-route
+    config:
+      mode: WEBSOCKET
+      session:
+        host: tcp://solace:55555
+        vpn_name: demo
+        authentication:
+          scheme: BASIC
+          username: "{vault://kv/solace-username}"
+          password: "{vault://kv/solace-password}"
+      flow:
+        binds:
+        - name: $(uri_captures['topic_id'])
+
+
+  # Security
+  - name: key-auth
+    service: solace-cloud-service
+    config:
+      anonymous: anonymous
+      hide_credentials: true
+      key_names:
+        - apikey
+  - name: jwt
+    service: solace-cloud-service
+    config:
+      anonymous: anonymous
+      header_names:
+        - authorization
+      claims_to_verify:
+        - exp
+        - nbf
+  - name: acl
+    route: solace-incoming-orders-route
+    config:
+      allow:
+        - solace
+        - admin
+      hide_groups_header: true
+  - name: acl
+    service: solace-cloud-service
+    config:
+      deny:
+        - anonymous
+      hide_groups_header: true
+
+  # Validation
+  - name: request-validator
+    route: solace-incoming-orders-route
+    config:
+      version: draft4
+      body_schema: |
+        {
+          "type":"object",
+          "required":["orderId","customerId","items","total"],
+          "properties":{
+            "orderId":{"type":"string"},
+            "customerId":{"type":"string"},
+            "items":{"type":"array"},
+            "total":{"type":"number"}
+          }
+        }
+
+  # Transformation & enrichment
+  - name: request-transformer
+    route: solace-incoming-orders-route
+    config:
+      add:
+        body:
+          - "source:kong-event-driven-api"
+
+# Protection
+  - name: rate-limiting
+    config:
+      policy: local
+      minute: 5
+  - name: request-size-limiting
+    config:
+      allowed_payload_size: 8192
+      size_unit: bytes
+
+consumers:
+  - username: anonymous
+    acls:
+      - group: anonymous
+  - username: partner@example.com
+    keyauth_credentials:
+      - key: partner1234
+  - username: internal@example.com
+    acls:
+      - group: solace
+    keyauth_credentials:
+      - key: internal1234
+    jwt_secrets:
+      - algorithm: HS256
+        key: <your_key>
+        secret: <your_secret>
