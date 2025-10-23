@@ -1,45 +1,31 @@
 _format_version: "3.0"
 _transform: true
 
-routes:
-- name: kafka-consumer-sse
-  hosts:
-  - kafka.dev
-  paths:
-  - /kafka/consumer/sse
-  plugins:
+services:
+  - name: kafka-local
+    url: tcp://localhost:9092
+    routes:
+    - name: kafka-consumer-http-get
+      paths:
+      - /kafka/rest/my-topic
+    - name: kafka-producer
+      paths:
+      - /kafka/my-topic
+
+plugins:
   - name: kafka-consume
+    route: kafka-consumer-http-get
     config:
       topics: 
-      - name: test
-      mode: server-sent-events
+      - name: my-topic
       bootstrap_servers:
       - host: localhost
         port: 9092
 
-- name: kafka-consumer-http-get
-  hosts:
-  - kafka.dev
-  paths:
-  - /kafka/consumer/http-get
-  plugins:
-  - name: kafka-consume
-    config:
-      topics: 
-      - name: test
-      bootstrap_servers:
-      - host: localhost
-        port: 9092
-
-- name: kafka-producer
-  hosts:
-  - kafka.dev
-  paths:
-  - /kafka/producer
-  plugins:
   - name: kafka-upstream
+    route: kafka-producer
     config:
-      topic: incoming
+      topic: my-topic
       bootstrap_servers:
       - host: localhost
         port: 9092

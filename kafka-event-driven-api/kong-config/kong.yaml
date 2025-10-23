@@ -1,21 +1,34 @@
 _format_version: "3.0"
 _transform: true
 
-routes:
-- name: kafka-consumer-ws
-  hosts:
-  - kafka.dev
-  paths:
-  - /kafka/consumer/ws
+services:
+  - name: kafka-local
+    url: tcp://localhost:9092
+    routes:
+    - name: kafka-consumer-ws
+      paths:
+      - /kafka/ws/my-topic
+    - name: kafka-consumer-sse
+      paths:
+      - /kafka/sse/my-topic
 
 plugins:
 - name: kafka-consume
   route: kafka-consumer-ws
   config:
     topics: 
-    - name: streaming
+    - name: my-topic
     mode: websocket
-    auto_offset_reset: earliest
+    bootstrap_servers:
+    - host: localhost
+      port: 9092
+
+- name: kafka-consume
+  route: kafka-consumer-sse
+  config:
+    topics: 
+    - name: my-topic
+    mode: server-sent-events
     bootstrap_servers:
     - host: localhost
       port: 9092

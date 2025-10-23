@@ -1,10 +1,18 @@
 # Kafka HTTP Mediation
 
-This example shows how to use Kong API Gateway to mediate between HTTP and Kafka.
+This example demonstrates how to use Kong API Gateway to mediate between HTTP and Kafka, enabling HTTP clients to produce and consume Kafka messages through REST endpoints.
+
+## Overview
+
+The setup includes:
+- Kong API Gateway 3.12 (configured as a Konnect data plane)
+- Apache Kafka (latest)
+- HTTP-to-Kafka producer route
+- HTTP consumer route for Kafka messages
 
 ## Prerequisites
 
-This uses the Kong Enterprise Plugins, so you will need a license. You can get a free trial license from [Kong](https://konghq.com/products/kong-konnect/register).
+This uses Kong Enterprise Plugins, so you will need a license. You can get a free trial license from [Kong](https://konghq.com/products/kong-konnect/register).
 
 **Software**
 
@@ -21,62 +29,61 @@ Start the docker compose environment:
 docker compose up -d
 ```
 
-## Produce
-
-To produce messages to the `incoming` topic run:
+Wait for all services to be healthy:
 
 ```sh
-curl -H 'Host: kafka.dev' -X POST -d '{"message": "Hello World"}' http://localhost:8000/kafka/producer
+docker compose ps
 ```
 
-This will produce a message to the `incoming` topic.
+## Usage
 
-> Note that you will need to run it twice as the first call creates the topic and the second call produces the message.
+### Produce Messages
 
-Check the produced messages using kcat:
+To produce messages to the `my-topic` Kafka topic via HTTP:
 
 ```sh
-kcat -C -b localhost:9092 -t incoming
+curl -X POST -d '{"message": "Hello World"}' http://localhost:8000/kafka/my-topic
 ```
 
-If you have jq installed you can use the following to pretty print the messages:
+This will produce a message to the `my-topic` topic through the `kafka-upstream` plugin.
+
+> Note: You may need to run it twice as the first call creates the topic and the second call produces the message.
+
+Verify the produced messages using kcat:
 
 ```sh
-kcat -C -b localhost:9092 -t incoming -e | jq
+kcat -C -b localhost:9092 -t my-topic
+```
+
+If you have jq installed, you can pretty print the messages:
+
+```sh
+kcat -C -b localhost:9092 -t my-topic -e | jq
 ```
 
 You should see the message you produced in the output.
 
-```json
-{
-  "body_args": {
-    "{\"message\": \"Hello World\"}": true
-  },
-  "body": "{\"message\": \"Hello World\"}"
-}
-```
+### Consume Messages
 
-## Consume
-
-**HTTP GET**
-
-To consume messages from the `test` topic run:
+To consume messages from the `my-topic` Kafka topic via HTTP:
 
 ```sh
-curl -H 'Host: kafka.dev' http://localhost:8000/kafka/consumer/http-get
+curl http://localhost:8000/kafka/rest/my-topic
 ```
 
-if you have `jq` installed you can use the following to pretty print the response:
+If you have `jq` installed, you can pretty print the response:
 
 ```sh
-curl -H 'Host: kafka.dev' http://localhost:8000/kafka/consumer/http-get -s | jq
+curl http://localhost:8000/kafka/rest/my-topic -s | jq
 ```
 
-The response will be a JSON array of messages.
+The response will be a JSON object containing messages from the topic.
+
+**Example Response (empty topic)**:
 
 ```json
 {
-  "test": {
+  "my-topic": {
     "partitions": {
       "0": {
         "errcode": 0,
@@ -88,23 +95,27 @@ The response will be a JSON array of messages.
 }
 ```
 
-There is no messages because we didn't produce any yet.
+**Produce a test message**:
 
-Run the following command to send a message to the `test` topic using kcat:
-
-```sh
-echo '{"message": "Hello World"}' | kcat -P -b localhost:9092 -t test
-```
-
-Now run again the consume command and you should see the message in the response.
+Run the following command to send a message to the `my-topic` topic using kcat:
 
 ```sh
-curl -H 'Host: kafka.dev' http://localhost:8000/kafka/consumer/http-get
+echo '{"message": "Hello World"}' | kcat -P -b localhost:9092 -t my-topic
 ```
+
+**Consume the message**:
+
+Now run the consume command again and you should see the message in the response:
+
+```sh
+curl http://localhost:8000/kafka/rest/my-topic
+```
+
+**Example Response (with message)**:
 
 ```json
 {
-  "test": {
+  "my-topic": {
     "partitions": {
       "0": {
         "errcode": 0,
@@ -112,7 +123,7 @@ curl -H 'Host: kafka.dev' http://localhost:8000/kafka/consumer/http-get
         "records": [
           {
             "key": "",
-            "offset": 1,
+            "offset": 0,
             "timestamp": 0,
             "value": "{\"message\": \"Hello World\"}"
           }
@@ -123,48 +134,62 @@ curl -H 'Host: kafka.dev' http://localhost:8000/kafka/consumer/http-get
 }
 ```
 
-**Server Sent Events**
+## Configuration
 
-To consume messages from the `test` topic using Server Sent Events run:
+- `kong-config/kong.yaml`: Contains the Kong configuration with Kafka plugins
+- `konnect.env`: Konnect data plane configuration (default)
+- `ee.env`: Kong Enterprise license configuration (alternative)
+- `docker-compose.yaml`: Docker services configuration
+
+### Kong Configuration Details
+
+The Kong configuration includes:
+
+**Service**: `kafka-local`
+- URL: `tcp://localhost:9092`
+
+**Routes**:
+- `kafka-consumer-http-get`: Listening on `/kafka/rest/my-topic` (HTTP consumer)
+- `kafka-producer`: Listening on `/kafka/my-topic` (HTTP producer)
+
+**Plugins**:
+1. **Kafka Consume Plugin**:
+   - Route: `kafka-consumer-http-get`
+   - Topic: `my-topic`
+   - Bootstrap servers: `localhost:9092`
+
+2. **Kafka Upstream Plugin**:
+   - Route: `kafka-producer`
+   - Topic: `my-topic`
+   - Bootstrap servers: `localhost:9092`
+
+## Troubleshooting
+
+- If you encounter issues, check the logs of the services:
+  ```sh
+  docker compose logs kong
+  docker compose logs kafka
+  ```
+
+- Ensure all services are healthy:
+  ```sh
+  docker compose ps
+  ```
+
+- Verify Kafka is accessible:
+  ```sh
+  kcat -L -b localhost:9092
+  ```
+
+- Check if the topic exists:
+  ```sh
+  kcat -L -b localhost:9092 -t my-topic
+  ```
+
+## Cleanup
+
+To stop and remove all containers:
 
 ```sh
-curl -H 'Host: kafka.dev' http://localhost:8000/kafka/consumer/sse
-```
-
-You will get a stream of messages in the response.
-
-```txt
-data: {"message": "Hello World"}
-topic: test
-event: message
-id: 0
-
-: keep-alive
-
-: keep-alive
-
-: keep-alive
-
-: keep-alive
-```
-
-You can now open another terminal and run the following command to send a message to the `test` topic using kcat:
-
-```sh
-echo '{"message": "Hello again"}' | kcat -P -b localhost:9092 -t test
-```
-
-You should see the message in the response.
-
-```txt
-...
-
-: keep-alive
-
-data: {"message": "Hello again"}
-topic: test
-event: message
-id: 1
-
-: keep-alive
+docker compose down
 ```
