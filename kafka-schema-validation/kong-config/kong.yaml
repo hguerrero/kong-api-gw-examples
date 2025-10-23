@@ -1,28 +1,31 @@
 _format_version: "3.0"
 _transform: true
 
-routes:
-- name: kafka-producer
-  paths:
-  - /kafka/producer
-- name: kafka-consumer
-  paths:
-  - /kafka/consumer/rest
-- name: kafka-consumer-schema
-  paths:
-  - /kafka/consumer/rest/schema
-- name: kafka-consumer-sse-schema
-  paths:
-  - /kafka/consumer/sse
+services:
+  - name: kafka-local
+    url: tcp://localhost:9092
+    routes:
+    - name: kafka-producer-schema
+      paths:
+      - /kafka/schema/my-topic
+    - name: kafka-consumer-schema
+      paths:
+      - /kafka/rest/no-schema/my-topic
+    - name: kafka-consumer-schema-avro
+      paths:
+      - /kafka/rest/schema/avro/my-topic
+    - name: kafka-consumer-sse-schema
+      paths:
+      - /kafka/sse/schema/avro/my-topic
 
 plugins:
 - name: kafka-upstream
-  route: kafka-producer
+  route: kafka-producer-schema
   config:
     bootstrap_servers:
     - host: kafka
       port: 9092
-    topic: my-topic-incoming
+    topic: my-topic-schema
     producer_async: false
     schema_registry:
       confluent:
@@ -33,23 +36,23 @@ plugins:
             username: user
             password: password
         value_schema:
-          subject_name: my-topic-incoming-value
+          subject_name: user-value
           schema_version: latest
     message_by_lua_functions:
     - "return function(message) return message.body end"  
 - name: kafka-consume
-  route: kafka-consumer
+  route: kafka-consumer-schema
   config:
     topics: 
-    - name: my-topic-incoming
+    - name: my-topic-schema
     bootstrap_servers:
     - host: kafka
       port: 9092
 - name: kafka-consume
-  route: kafka-consumer-schema
+  route: kafka-consumer-schema-avro
   config:
     topics: 
-    - name: my-topic-incoming
+    - name: my-topic-schema
     bootstrap_servers:
     - host: kafka
       port: 9092
@@ -62,7 +65,7 @@ plugins:
   route: kafka-consumer-sse-schema
   config:
     topics: 
-    - name: my-topic-incoming
+    - name: my-topic-schema
     bootstrap_servers:
     - host: kafka
       port: 9092

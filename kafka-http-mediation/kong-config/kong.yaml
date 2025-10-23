@@ -19,7 +19,7 @@ plugins:
       topics: 
       - name: my-topic
       bootstrap_servers:
-      - host: localhost
+      - host: kafka
         port: 9092
 
   - name: kafka-upstream
@@ -27,5 +27,5 @@ plugins:
     config:
       topic: my-topic
       bootstrap_servers:
-      - host: localhost
+      - host: kafka
         port: 9092

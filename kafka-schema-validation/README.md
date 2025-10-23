@@ -9,7 +9,6 @@ The example sets up a complete event-driven architecture with the following comp
 - **Kong Gateway**: Acts as an API gateway and event gateway for Kafka operations
 - **Apache Kafka**: Message broker for event streaming
 - **Schema Registry (Apicurio)**: Manages and validates message schemas (Confluent-compatible)
-- **Keycloak**: Identity and access management (for authentication scenarios)
 - **Schema Registry UI**: Web interface for managing schemas
 
 ## Components
@@ -27,37 +26,34 @@ The example sets up a complete event-driven architecture with the following comp
 3. **Schema Registry UI** (Port 8888)
    - Web interface for schema management
 
-4. **Keycloak** (Port 18080)
-   - Identity provider for authentication
-   - Admin credentials: admin/admin
-
-5. **Kong Gateway** (Ports 8000, 8443, 8001, 8002)
+4. **Kong Gateway** (Ports 8000, 8443)
    - API Gateway with Kafka plugins
    - Admin API and Manager UI available
+
 
 ### Kong Routes and Plugins
 
 The example configures several routes with Kafka plugins:
 
 #### Producer Route
-- **Route**: `/kafka/producer`
+- **Route**: `/kafka/schema/:topic`
 - **Plugin**: `kafka-upstream`
 - **Features**:
-  - Produces messages to `my-topic-incoming` topic
+  - Produces messages to specified topic with schema validation
   - Schema validation using Avro schema from registry
   - Synchronous message production
   - Message transformation via Lua functions
 
 #### Consumer Routes
-1. **Basic Consumer** (`/kafka/consumer/rest`)
+1. **Basic Consumer** (`/kafka/rest/no-schema/:topic`)
    - REST-based message consumption
    - No schema validation
 
-2. **Schema-Validated Consumer** (`/kafka/consumer/rest/schema`)
+2. **Schema-Validated Consumer** (`/kafka/rest/schema/avro/:topic`)
    - REST-based consumption with schema validation
    - Deserializes messages using registry schemas
 
-3. **Server-Sent Events Consumer** (`/kafka/consumer/sse`)
+3. **Server-Sent Events Consumer** (`/kafka/sse/schema/avro/:topic`)
    - Real-time message streaming via SSE
    - Schema validation enabled
 
@@ -109,23 +105,14 @@ The example configures several routes with Kafka plugins:
 
 ### Running the Example
 
-#### Option 1: Kong Konnect
 ```bash
 docker-compose up -d
 ```
 
-#### Option 2: Kong Enterprise
-```bash
-docker-compose -f docker-compose.ee.yaml up -d
-```
-
 ### Verify Services
 1. **Kong Gateway**: http://localhost:8000
-2. **Kong Admin API**: http://localhost:8001
-3. **Kong Manager** (EE only): http://localhost:8002
-4. **Schema Registry**: http://localhost:8080
+2. **Schema Registry**: http://localhost:8080
 5. **Schema Registry UI**: http://localhost:8888
-6. **Keycloak**: http://localhost:18080
 
 ## Usage Examples
 
@@ -135,14 +122,16 @@ First, register the Avro schema in the schema registry:
 ```bash
 curl -X POST http://localhost:8080/apis/ccompat/v7/subjects/user-value/versions \
   -H "Content-Type: application/vnd.schemaregistry.v1+json" \
-  -d @avro-schema.json
+  -d '{
+    "schema": "{\"type\":\"record\",\"name\":\"UserRecord\",\"namespace\":\"kong.avro\",\"fields\":[{\"name\":\"username\",\"type\":\"string\"},{\"name\":\"age\",\"type\":\"int\"}]}"
+  }'
 ```
 
 ### 2. Produce Messages
 Send a message through Kong to Kafka with schema validation:
 
 ```bash
-curl -X POST http://localhost:8000/kafka/producer \
+curl -X POST http://localhost:8000/kafka/schema/my-topic \
   -H "Content-Type: application/json" \
   -d '{
     "username": "john_doe",
@@ -154,17 +143,17 @@ curl -X POST http://localhost:8000/kafka/producer \
 
 #### REST Consumer (without schema)
 ```bash
-curl http://localhost:8000/kafka/consumer/rest
+curl http://localhost:8000/kafka/rest/no-schema/my-topic
 ```
 
 #### REST Consumer (with schema validation)
 ```bash
-curl http://localhost:8000/kafka/consumer/rest/schema
+curl http://localhost:8000/kafka/rest/schema/avro/my-topic
 ```
 
 #### Server-Sent Events Consumer
 ```bash
-curl -N http://localhost:8000/kafka/consumer/sse
+curl -N http://localhost:8000/kafka/sse/schema/avro/my-topic
 ```
 
 ## Configuration Files
@@ -174,7 +163,6 @@ curl -N http://localhost:8000/kafka/consumer/sse
 - `kong-config/kong.yaml`: Kong declarative configuration
 - `konnect.env`: Kong Konnect data plane configuration
 - `ee.env`: Kong Enterprise license configuration
-- `realm-export.json`: Keycloak realm configuration
 
 ## Key Features Demonstrated
 
@@ -182,8 +170,7 @@ curl -N http://localhost:8000/kafka/consumer/sse
 2. **Multiple Consumer Patterns**: REST and Server-Sent Events consumption
 3. **Schema Registry Integration**: Confluent-compatible schema management
 4. **Message Transformation**: Lua-based message processing
-5. **Authentication Ready**: Keycloak integration for secure access
-6. **Enterprise Features**: Kong Manager UI and advanced plugins (EE version)
+5. **Enterprise Features**: Kong Manager UI and advanced plugins (EE version)
 
 ## Troubleshooting
 

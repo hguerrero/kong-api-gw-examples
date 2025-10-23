@@ -20,7 +20,7 @@ plugins:
     - name: my-topic
     mode: websocket
     bootstrap_servers:
-    - host: localhost
+    - host: kafka
       port: 9092
 
 - name: kafka-consume
@@ -30,5 +30,5 @@ plugins:
     - name: my-topic
     mode: server-sent-events
     bootstrap_servers:
-    - host: localhost
+    - host: kafka
       port: 9092
