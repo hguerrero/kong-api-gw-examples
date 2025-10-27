@@ -156,6 +156,43 @@ curl http://localhost:8000/kafka/rest/schema/avro/my-topic
 curl -N http://localhost:8000/kafka/sse/schema/avro/my-topic
 ```
 
+## Optional: JSON Schema Validation Flow
+
+Kong also supports JSON Schema validation as an alternative to Avro. This section demonstrates how to use JSON Schema for message validation.
+
+### 1. Register JSON Schema
+Register the JSON schema in the schema registry:
+
+```bash
+curl -X POST http://localhost:8080/apis/ccompat/v7/subjects/user-json-value/versions \
+  -H "Content-Type: application/vnd.schemaregistry.v1+json" \
+  -d '{
+    "schema": "{\"$schema\":\"https://json-schema.org/draft-07/schema#\",\"type\":\"object\",\"properties\":{\"username\":{\"type\":\"string\",\"minLength\":3},\"age\":{\"type\":\"integer\",\"minimum\":0}},\"required\":[\"username\",\"age\"]}"
+  }'
+```
+
+### 2. Produce Messages with JSON Schema Validation
+Send a message through Kong to Kafka with JSON schema validation:
+
+```bash
+curl -X POST http://localhost:8000/kafka/schema/my-topic \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "jane_doe",
+    "age": 28
+  }'
+```
+
+**Note**: Messages must comply with the JSON schema constraints:
+- `username` must be a string with minimum length of 3 characters
+- `age` must be an integer with minimum value of 0
+- Both fields are required
+
+### 3. Consume Messages with JSON Schema Validation
+```bash
+curl http://localhost:8000/kafka/rest/schema/json/my-topic
+```
+
 ## Configuration Files
 
 - `docker-compose.yaml`: Open source Kong setup
