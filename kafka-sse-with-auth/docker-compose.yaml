@@ -2,40 +2,51 @@ services:
   kafka:
     image: apache/kafka:latest
     container_name: kafka
-    network_mode: host
+    ports:
+      - "9092:19092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093,EXTERNAL://0.0.0.0:19092
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,EXTERNAL://localhost:9092,CONTROLLER://kafka:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_CLUSTER_ID: 'abcdefghijklmnopqrstuv'
+      KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
     healthcheck:
-      test: [ "CMD-SHELL", "kafka-topics.sh --bootstrap-server localhost:9092 --list" ]
+      test: [ "CMD-SHELL", "kafka-topics.sh --bootstrap-server kafka:9092 --list" ]
       interval: 10s
       timeout: 10s
       retries: 5
 
-  kong:
-    image: kong/kong-gateway:3.10
-    container_name: kong
-    network_mode: host
-    depends_on:
-      - kafka
-    volumes:
-        - ./kong-config/:/kong/declarative/
-    environment:
-        - KONG_DATABASE=off
-        - KONG_DECLARATIVE_CONFIG=/kong/declarative/kong.yaml
-        - KONG_PROXY_ACCESS_LOG=/dev/stdout
-        - KONG_ADMIN_ACCESS_LOG=/dev/stdout
-        - KONG_PROXY_ERROR_LOG=/dev/stderr
-        - KONG_ADMIN_ERROR_LOG=/dev/stderr
-        - KONG_ADMIN_LISTEN=0.0.0.0:8001
-        - KONG_ADMIN_GUI_URL=http://localhost:8002
-        - KONG_LICENSE_DATA
-        # - KONG_LOG_LEVEL=debug
-
   keycloak:
+    profiles:
+      - keycloak
     image: quay.io/keycloak/keycloak:latest
     container_name: keycloak
-    network_mode: host    
+    ports:
+      - "8080:8080"
     environment:
       - KC_BOOTSTRAP_ADMIN_USERNAME=admin
       - KC_BOOTSTRAP_ADMIN_PASSWORD=admin
     command: start-dev --import-realm
     volumes:
       - ./realm-export.json:/opt/keycloak/data/import/realm-export.json
+
+  kong:
+    image: kong/kong-gateway:3.12
+    container_name: kong-docker
+    ports:
+      - "8000:8000"
+      - "8443:8443"
+    depends_on:
+      - kafka
+    env_file:
+      - konnect.env
+    environment:
+        KONG_LOG_LEVEL: debug
